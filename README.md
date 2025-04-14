@@ -1,29 +1,43 @@
-# CipherShare – Phase 1 (Initial Connection Test)
+# CipherShare – Phase 1: Basic P2P File Transfer & Unencrypted Sharing
 
 ## Project Overview
 
-CipherShare is a secure distributed file sharing system developed for the CSE451 course at Ain Shams University, Faculty of Engineering. It is designed to enable peer-to-peer (P2P) file transfers with a strong focus on security, including user authentication, credential management, file encryption, and integrity verification.
+CipherShare is a secure, distributed file sharing system developed for the CSE451 course at Ain Shams University, Faculty of Engineering. It enables peer-to-peer (P2P) file transfers with a strong focus on security, credential management, and encryption. 
 
-This repository contains the initial Phase 1 milestone, which is a minimal proof-of-concept demonstrating successful socket-based communication between a client and a peer. This step serves as the foundation for building the full system collaboratively.
+This repository contains the finalized implementation of **Phase 1**, which establishes the foundation for secure and distributed file sharing. It includes a functional P2P network, basic file listing, and unencrypted file transfer between peers.
 
 ---
 
-## Phase 1 Objective
+## Phase 1 Objectives
 
-- Set up the basic P2P socket connection between two nodes.
-- Ensure the client can successfully connect to the peer.
-- Exchange a basic message ("Hello from Peer!") to verify communication.
-- Establish version control and team collaboration structure on GitHub.
+- Implement a basic P2P network allowing peer-to-peer connections.
+- Enable rudimentary file listing from the peer’s shared directory.
+- Support unencrypted file transfer from one peer to another.
+- Set up the initial Git-based project structure for team collaboration.
+
+---
+
+## Implemented Features
+
+- Basic socket-based P2P network setup.
+- Peer server that shares files from a local directory.
+- Client application that connects to the peer, lists available files, and downloads selected files.
+- Manual upload system (files placed in the `shared` folder).
+- Directory management for received files.
 
 ---
 
 ## File Structure
 
+```
 CipherShare-Phase1/
 │
-├── fileshare_peer.py         # Peer script that listens for incoming connections and sends a greeting
-├── fileshare_client.py       # Client script that connects to the peer and receives a message
+├── fileshare_peer.py         # Runs the peer server, accepts LIST and DOWNLOAD requests
+├── fileshare_client.py       # Client application to list and download files from peer
+├── shared/                   # Folder for files to be shared by peer
+├── received/                 # Folder where downloaded files are saved
 └── README.md                 # Project documentation
+```
 
 ---
 
@@ -31,70 +45,68 @@ CipherShare-Phase1/
 
 - Python 3.x
 - TCP Socket Programming (socket module)
-- Command-line interface (CLI)
+- File I/O and CLI interaction
 
 ---
 
-## How to Run the Application
+## How to Use
 
-### Step 1: Start the Peer Node
+### 1. Start the Peer
 
-In a terminal window, run the following command:
+Run this command in a terminal:
 ```bash
 python fileshare_peer.py
 ```
 
-Expected output:
-```
-[+] Peer started on port 5001, waiting for connections...
-```
+The peer will listen on a port (default or entered by user) and serve files from the `shared` directory.
 
-### Step 2: Start the Client
+### 2. Place Files to Share
 
-In a second terminal window, run:
+Copy any files you want to share into the `shared/` folder before clients connect.
+
+### 3. Run the Client
+
+In a second terminal:
 ```bash
 python fileshare_client.py
 ```
 
-Expected output:
-```
-[+] Connected to peer
-[+] Received from peer: Hello from Peer!
-```
+You will be prompted for:
+- The peer IP address (use `127.0.0.1` for local testing)
+- The peer port
+- The command to `LIST` files or `DOWNLOAD <filename>`
 
-This confirms that the connection between the client and peer is successfully established.
+### 4. Check Downloaded Files
 
----
-
-## Purpose of This Initial Commit
-
-- Establish the base socket communication.
-- Set up the folder and file structure on GitHub.
-- Allow teammates to contribute in a structured, sequential manner.
-- Prepare the codebase for future implementation of file transfer and encryption features.
+All downloaded files will be saved in the `received/` folder.
 
 ---
 
-## Next Steps (Planned for Future Phases)
+## Deliverables
 
-- Implement file listing and downloading.
-- Add secure password-based user authentication.
-- Integrate file encryption (AES or ChaCha20).
-- Introduce hashing (SHA-256) for integrity verification.
-- Explore key derivation techniques (Argon2, PBKDF2).
-- Design a simple distributed file discovery mechanism.
+- A working prototype of an unencrypted P2P file sharing system
+- Rudimentary file discovery and listing
+- Functional Git repository with clear structure and version history
 
 ---
 
-## Team Collaboration
+## Documentation
 
-This repository is managed by a group of 2–4 students working collaboratively using Git. This commit is the foundation, and subsequent commits will gradually implement the full functionality of CipherShare.
+- Phase 1 report (including implemented features, challenges, and future plans)
+- Initial system architecture diagram
+- Basic user manual (how to run the peer and client applications)
 
 ---
 
-## Contact
+## Next Phase Preview
 
-For questions or collaboration:
+- Add secure user registration and login with Argon2 password hashing
+- Enable encrypted file transfer (AES/ChaCha20)
+- Introduce file integrity checks (SHA-256)
+- Improve peer discovery and session management
 
-Course: CSE451 – Computer and Network Security  
-Instructor-provided templates and policies apply
+---
+
+## Team Notes
+
+This project is developed in a team of 2–4 members using Git-based version control. This commit represents the completion of Phase 1. Future commits will build upon this version to implement advanced security and distributed functionality.
