@@ -1,31 +1,38 @@
-import socket
-
-class FileShareClient:
-    def __init__(self, ip, port):
-        self.ip = ip
-        self.port = port
-
-    def say_hello(self):
-        try:
-            s = socket.socket()
-            s.connect((self.ip, self.port))
-            print("[+] Connected to peer")
-            msg = s.recv(1024).decode()
-            print("[+] Received from peer:", msg)
-            s.close()
-        except Exception as e:
-            print("[-] Connection failed:", e)
 # fileshare_client.py
 import socket
 import os
+from auth import register_user, login_user
 
+# ==== Step 1: User Authentication ====
+print("Welcome to CipherShare!")
+while True:
+    action = input("Do you want to LOGIN or REGISTER? ").strip().upper()
+    username = input("Username: ")
+    password = input("Password: ")
+
+    if action == "REGISTER":
+        success, msg = register_user(username, password)
+        print(msg)
+        if success:
+            break
+    elif action == "LOGIN":
+        if login_user(username, password):
+            print("[+] Login successful!")
+            break
+        else:
+            print("[-] Invalid username or password.")
+    else:
+        print("[-] Invalid action.")
+
+# ==== Step 2: Directory for Received Files ====
 RECEIVED_DIR = "received"
 os.makedirs(RECEIVED_DIR, exist_ok=True)
 
+# ==== Step 3: Client Class ====
 class FileShareClient:
     def __init__(self):
-        self.username = None
-        self.session_key = None
+        self.username = username  # Store current user
+        self.session_key = None   # Placeholder for future use
 
     def connect_to_peer(self, ip, port):
         try:
@@ -73,7 +80,7 @@ class FileShareClient:
         print("[*] Upload is handled manually by placing files in the 'shared' folder of the peer.")
         print("[*] This feature will be automated in Phase 3.")
 
-
+# ==== Step 4: Interactive Client Menu ====
 if __name__ == "__main__":
     client = FileShareClient()
 
@@ -92,7 +99,3 @@ if __name__ == "__main__":
             client.download_file(ip, port, filename)
         else:
             print("[-] Unknown command.")
-
-if __name__ == '__main__':
-    client = FileShareClient('127.0.0.1', 5001)
-    client.say_hello()
