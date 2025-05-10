@@ -1,12 +1,13 @@
 import socket
 import threading
 import os
-import hashlib
-from crypto_utils import hash_password, verify_password, derive_key_from_password
-import secrets
+from crypto_utils import hash_password, verify_password
+import json
 
 SHARED_DIR = "shared"
 os.makedirs(SHARED_DIR, exist_ok=True)
+
+USERS_FILE = "users_peer.json"  # Persistent storage for users
 
 class FileSharePeer:
     def __init__(self, port):
@@ -14,11 +15,21 @@ class FileSharePeer:
         self.host = '0.0.0.0'
         self.port = port
         self.shared_files = {}  # filename: filepath
-        self.users = {}  # username: {password_hash, salt}
+        self.users = self.load_users()
 
         # Preload shared files
         for f in os.listdir(SHARED_DIR):
             self.shared_files[f] = os.path.join(SHARED_DIR, f)
+
+    def load_users(self):
+        if os.path.exists(USERS_FILE):
+            with open(USERS_FILE, 'r') as f:
+                return json.load(f)
+        return {}
+
+    def save_users(self):
+        with open(USERS_FILE, 'w') as f:
+            json.dump(self.users, f)
 
     def start_peer(self):
         self.peer_socket.bind((self.host, self.port))
@@ -43,9 +54,9 @@ class FileSharePeer:
                 if username in self.users:
                     client_socket.send(b"USER_EXISTS")
                 else:
-                    salt = secrets.token_bytes(16)
-                    hashed_password, _ = hash_password(password, salt)
-                    self.users[username] = {"password_hash": hashed_password, "salt": salt}
+                    hashed_password = hash_password(password)
+                    self.users[username] = {"password_hash": hashed_password}
+                    self.save_users()
                     client_socket.send(b"REGISTERED")
 
             elif command.startswith("LOGIN"):
@@ -53,9 +64,8 @@ class FileSharePeer:
                 if username not in self.users:
                     client_socket.send(b"USER_NOT_FOUND")
                 else:
-                    stored_password_hash = self.users[username]["password_hash"]
-                    salt = self.users[username]["salt"]
-                    if verify_password(password, stored_password_hash, salt):
+                    stored_hash = self.users[username]["password_hash"]
+                    if verify_password(password, stored_hash):
                         client_socket.send(b"LOGIN_SUCCESS")
                     else:
                         client_socket.send(b"INVALID_PASSWORD")

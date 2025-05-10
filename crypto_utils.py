@@ -1,23 +1,30 @@
 import os
 import base64
 import hashlib
+import secrets
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives import hashes, padding as sym_padding
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
-import secrets
+from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError
 
-# Hash Password and Verification Functions
-def hash_password(password, salt=None):
-    if salt is None:
-        salt = secrets.token_bytes(16)  # Generate new salt if none is provided
-    hashed_password = hashlib.sha256(password.encode('utf-8') + salt).hexdigest()
-    return hashed_password, salt
+# === Argon2 Password Hasher ===
+argon2_hasher = PasswordHasher()
 
-def verify_password(password, hashed_password, salt):
-    return hashed_password == hashlib.sha256(password.encode('utf-8') + salt).hexdigest()
+# Hash Password (Argon2)
+def hash_password(password):
+    hashed = argon2_hasher.hash(password)
+    return hashed
 
-# Derive Key from Password
+# Verify Password (Argon2)
+def verify_password(password, hashed_password):
+    try:
+        return argon2_hasher.verify(hashed_password, password)
+    except VerifyMismatchError:
+        return False
+
+# Derive Key from Password using PBKDF2
 def derive_key_from_password(password, salt):
     kdf = PBKDF2HMAC(
         algorithm=hashes.SHA256(),
@@ -28,32 +35,32 @@ def derive_key_from_password(password, salt):
     )
     return kdf.derive(password.encode())
 
-# Encryption Function
+# AES Encryption
 def encrypt_file(input_path, output_path, key):
-    iv = os.urandom(16)  # Generate a random IV for each file
+    iv = os.urandom(16)  # Random IV
     cipher = Cipher(algorithms.AES(key), modes.CBC(iv))
     encryptor = cipher.encryptor()
     padder = sym_padding.PKCS7(128).padder()
 
     with open(input_path, 'rb') as infile, open(output_path, 'wb') as outfile:
-        outfile.write(iv)  # Write IV at the beginning of the file
+        outfile.write(iv)  # Save IV at beginning
         while chunk := infile.read(1024):
             padded_data = padder.update(chunk)
             outfile.write(encryptor.update(padded_data))
         outfile.write(encryptor.update(padder.finalize()))
-        outfile.write(encryptor.finalize())  # Finalize encryption
+        outfile.write(encryptor.finalize())
 
-    return iv.hex()  # Return the IV in hexadecimal format
+    return iv.hex()
 
-# Decryption Function
+# AES Decryption
 def decrypt_file(input_path, output_path, key, iv_hex):
-    iv = bytes.fromhex(iv_hex)  # Convert the IV back from hexadecimal
+    iv = bytes.fromhex(iv_hex)
     cipher = Cipher(algorithms.AES(key), modes.CBC(iv))
     decryptor = cipher.decryptor()
     unpadder = sym_padding.PKCS7(128).unpadder()
 
     with open(input_path, 'rb') as infile:
-        infile.seek(16)  # Skip the IV in the file
+        infile.seek(16)  # Skip IV
         ciphertext = infile.read()
         plaintext = decryptor.update(ciphertext) + decryptor.finalize()
         unpadded = unpadder.update(plaintext) + unpadder.finalize()

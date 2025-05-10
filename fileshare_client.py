@@ -89,13 +89,27 @@ if __name__ == "__main__":
         if cmd == "EXIT":
             break
         elif cmd.startswith("LIST"):
-            ip = input("Peer IP: ")
-            port = int(input("Peer Port: "))
+            ip = input("Peer IP: ").strip()
+            try:
+                port = int(input("Peer Port: ").strip())
+            except ValueError:
+                print("[-] Invalid port number. Please enter a valid number like 9000.")
+                continue
             client.list_shared_files(ip, port)
+
         elif cmd.startswith("DOWNLOAD"):
-            ip = input("Peer IP: ")
-            port = int(input("Peer Port: "))
-            filename = cmd.split(" ", 1)[1]
+            ip = input("Peer IP: ").strip()
+            try:
+                port = int(input("Peer Port: ").strip())
+            except ValueError:
+                print("[-] Invalid port number. Please enter a valid number like 9000.")
+                continue
+            parts = cmd.split(" ", 1)
+            if len(parts) < 2:
+                print("[-] Missing filename.")
+                continue
+            filename = parts[1]
             client.download_file(ip, port, filename)
+
         else:
             print("[-] Unknown command.")
