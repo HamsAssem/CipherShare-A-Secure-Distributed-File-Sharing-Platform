@@ -1,7 +1,9 @@
-# fileshare_peer.py
 import socket
 import threading
 import os
+import hashlib
+from crypto_utils import hash_password, verify_password, derive_key_from_password
+import secrets
 
 SHARED_DIR = "shared"
 os.makedirs(SHARED_DIR, exist_ok=True)
@@ -12,6 +14,7 @@ class FileSharePeer:
         self.host = '0.0.0.0'
         self.port = port
         self.shared_files = {}  # filename: filepath
+        self.users = {}  # username: {password_hash, salt}
 
         # Preload shared files
         for f in os.listdir(SHARED_DIR):
@@ -34,6 +37,39 @@ class FileSharePeer:
             if command == "LIST":
                 files = "\n".join(self.shared_files.keys())
                 client_socket.send(files.encode())
+
+            elif command.startswith("REGISTER"):
+                _, username, password = command.split(maxsplit=2)
+                if username in self.users:
+                    client_socket.send(b"USER_EXISTS")
+                else:
+                    salt = secrets.token_bytes(16)
+                    hashed_password, _ = hash_password(password, salt)
+                    self.users[username] = {"password_hash": hashed_password, "salt": salt}
+                    client_socket.send(b"REGISTERED")
+
+            elif command.startswith("LOGIN"):
+                _, username, password = command.split(maxsplit=2)
+                if username not in self.users:
+                    client_socket.send(b"USER_NOT_FOUND")
+                else:
+                    stored_password_hash = self.users[username]["password_hash"]
+                    salt = self.users[username]["salt"]
+                    if verify_password(password, stored_password_hash, salt):
+                        client_socket.send(b"LOGIN_SUCCESS")
+                    else:
+                        client_socket.send(b"INVALID_PASSWORD")
+
+            elif command.startswith("UPLOAD"):
+                _, filename = command.split(maxsplit=1)
+                filepath = os.path.join(SHARED_DIR, filename)
+                with open(filepath, "wb") as f:
+                    while chunk := client_socket.recv(1024):
+                        if chunk == b"DONE":
+                            break
+                        f.write(chunk)
+                self.shared_files[filename] = filepath
+                client_socket.send(b"UPLOAD_SUCCESS")
 
             elif command.startswith("DOWNLOAD"):
                 _, filename = command.split(maxsplit=1)
