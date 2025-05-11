@@ -1,112 +1,127 @@
-# CipherShare – Phase 1: Basic P2P File Transfer & Unencrypted Sharing
 
-## Project Overview
+# CipherShare - Secure P2P File Sharing
 
-CipherShare is a secure, distributed file sharing system developed for the CSE451 course at Ain Shams University, Faculty of Engineering. It enables peer-to-peer (P2P) file transfers with a strong focus on security, credential management, and encryption. 
+CipherShare is a secure, distributed file sharing system developed for the CSE451 course at Ain Shams University, Faculty of Engineering. It enables peer-to-peer (P2P) file transfers with a strong focus on security, credential management, and encryption.
 
-This repository contains the finalized implementation of **Phase 1**, which establishes the foundation for secure and distributed file sharing. It includes a functional P2P network, basic file listing, and unencrypted file transfer between peers.
+This repository contains the finalized implementation of Phase 1, which establishes the foundation for secure and distributed file sharing. It includes a functional P2P network, basic file listing, and encrypted file transfer between peers.
 
----
+## Features
 
-## Phase 1 Objectives
+### ✅ Phase 1: Basic P2P File Transfer
+- Peer-to-peer network setup using sockets
+- Encrypted file transfer functionality
+- File listing and discovery mechanism
+- Clean project structure with modular components
 
-- Implement a basic P2P network allowing peer-to-peer connections.
-- Enable rudimentary file listing from the peer’s shared directory.
-- Support unencrypted file transfer from one peer to another.
-- Set up the initial Git-based project structure for team collaboration.
+### ✅ Phase 2: User Authentication
+- User registration and login system
+- Argon2 password hashing (superior to PBKDF2/SHA-256)
+- Encrypted credential storage using AES-256
+- Session management
 
----
+### ✅ Phase 3: File Security
+- AES-256-CBC file encryption/decryption
+- SHA-256 file integrity verification
+- Secure key derivation (PBKDF2-HMAC-SHA256)
+- Encrypted metadata storage
 
-## Implemented Features
+### ✅ Phase 4: Enhanced Features
+- Client-side encrypted credential storage
+- Basic command-line interface
+- File transfer status indicators
 
-- Basic socket-based P2P network setup.
-- Peer server that shares files from a local directory.
-- Client application that connects to the peer, lists available files, and downloads selected files.
-- Manual upload system (files placed in the `shared` folder).
-- Directory management for received files.
+## Technology Stack
 
----
+| Component           | Technology Used               |
+|---------------------|-------------------------------|
+| Encryption          | AES-256-CBC, Argon2, PBKDF2   |
+| Hashing             | SHA-256                       |
+| Networking          | Python sockets                |
+| Key Exchange        | ECDH (available but unused)   |
+| User Authentication | Encrypted JSON storage        |
 
-## File Structure
+## Installation
 
-```
-CipherShare-Phase1/
-│
-├── fileshare_peer.py         # Runs the peer server, accepts LIST and DOWNLOAD requests
-├── fileshare_client.py       # Client application to list and download files from peer
-├── shared/                   # Folder for files to be shared by peer
-├── received/                 # Folder where downloaded files are saved
-└── README.md                 # Project documentation
-```
+1. **Prerequisites**:
+   - Python 3.8+
+   - Required packages: `pip install cryptography argon2-cffi`
 
----
+2. **Clone the repository**:
+   ```bash
+   git clone https://github.com/yourusername/ciphershare.git
+   cd ciphershare
+   ```
 
-## Technologies Used
+3. **Set up environment**:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   pip install -r requirements.txt
+   ```
 
-- Python 3.x
-- TCP Socket Programming (socket module)
-- File I/O and CLI interaction
+## Usage
 
----
-
-## How to Use
-
-### 1. Start the Peer
-
-Run this command in a terminal:
+### Running a Peer Node
 ```bash
 python fileshare_peer.py
+Enter port for peer to listen on: 5000
 ```
 
-The peer will listen on a port (default or entered by user) and serve files from the `shared` directory.
-
-### 2. Place Files to Share
-
-Copy any files you want to share into the `shared/` folder before clients connect.
-
-### 3. Run the Client
-
-In a second terminal:
+### Using the Client
 ```bash
 python fileshare_client.py
 ```
 
-You will be prompted for:
-- The peer IP address (use `127.0.0.1` for local testing)
-- The peer port
-- The command to `LIST` files or `DOWNLOAD <filename>`
+### Basic Commands:
 
-### 4. Check Downloaded Files
+1. **Register/Login**:
+   ```
+   [🔐] Choose LOGIN or REGISTER
+   [👤] Enter username
+   [🔑] Enter password
+   ```
 
-All downloaded files will be saved in the `received/` folder.
+2. **File Operations**:
 
----
+   * `LIST` - Show available files
+   * `UPLOAD <path>` - Share a file
+   * `DOWNLOAD <filename>` - Get a file
+   * `EXIT` - Quit application
 
-## Deliverables
+## Project Structure
 
-- A working prototype of an unencrypted P2P file sharing system
-- Rudimentary file discovery and listing
-- Functional Git repository with clear structure and version history
+```
+ciphershare/
+├── auth.py               # User authentication handlers
+├── crypto_utils.py       # Cryptographic operations
+├── fileshare_client.py   # Client implementation
+├── fileshare_peer.py     # Peer node implementation
+├── format_users.py       # User management utility
+├── shared/               # Directory for shared files
+├── received/             # Directory for downloaded files
+├── users.json            # Encrypted user database (users are hashed in a machine language that is not human-readable)
+├── shared_metadata.json  # File transfer metadata
+└── salt.bin              # Cryptographic salt
+```
 
----
+## Security Implementation
 
-## Documentation
+| Feature            | Implementation Details             |
+| ------------------ | ---------------------------------- |
+| Password Hashing   | Argon2id with 3 iterations         |
+| File Encryption    | AES-256-CBC with random IVs        |
+| Key Derivation     | PBKDF2-HMAC-SHA256 (100,000 iters) |
+| Data Integrity     | SHA-256 checksums                  |
+| Credential Storage | AES-encrypted JSON                 |
 
-- Phase 1 report (including implemented features, challenges, and future plans)
-- Initial system architecture diagram
-- Basic user manual (how to run the peer and client applications)
+## User Management
 
----
+The user data is stored in **users.json** with hashed passwords in a format that is not human-readable for added security. However, for testing purposes, you can run `format_users.py` to generate a readable `users_formatted.txt` file, which lists the usernames to ensure users are registered in the system.
 
-## Next Phase Preview
+## Roadmap
 
-- Add secure user registration and login with Argon2 password hashing
-- Enable encrypted file transfer (AES/ChaCha20)
-- Introduce file integrity checks (SHA-256)
-- Improve peer discovery and session management
+* [ ] Implement ECDH key exchange
+* [ ] Add file chunking for large files
+* [ ] Develop peer discovery mechanism
+* [ ] Create graphical user interface
 
----
-
-## Team Notes
-
-This project is developed in a team of 2–4 members using Git-based version control. This commit represents the completion of Phase 1. Future commits will build upon this version to implement advanced security and distributed functionality.
