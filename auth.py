@@ -1,6 +1,6 @@
-import hashlib
 import json
 import os
+from crypto_utils import hash_password, verify_password
 
 USERS_FILE = "users.json"
 
@@ -14,18 +14,18 @@ def save_users(users):
     with open(USERS_FILE, "w") as f:
         json.dump(users, f)
 
-def hash_password(password):
-    return hashlib.sha256(password.encode()).hexdigest()
-
 def register_user(username, password):
     users = load_users()
     if username in users:
         return False, "User already exists."
-    users[username] = hash_password(password)
+    hashed_pw = hash_password(password)
+    users[username] = hashed_pw
     save_users(users)
     return True, "User registered."
 
 def login_user(username, password):
     users = load_users()
-    hashed = hash_password(password)
-    return users.get(username) == hashed
+    stored_hash = users.get(username)
+    if not stored_hash:
+        return False
+    return verify_password(password, stored_hash)

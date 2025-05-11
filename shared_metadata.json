@@ -1,0 +1,1 @@
+{"TestFile.txt": {"path": "shared\\TestFile.txt.enc", "iv": "dbdbff8f0f0f1469d435eacefb7ede2e", "hash": "9543c433ff7600842c3cbd546d7c2f94e185e538ea5ad68e9a1973edbada3d6a"}, "TestFile2.txt": {"path": "shared\\TestFile2.txt.enc", "iv": "49d4671d75c50e4c04555bc37a7cff3c", "hash": "4c60e594b9cd20cf33a52a1bf285d89e9a38a59f507305874f0f4027767574c3"}}

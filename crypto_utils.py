@@ -60,7 +60,7 @@ def decrypt_file(input_path, output_path, key, iv_hex):
     unpadder = sym_padding.PKCS7(128).unpadder()
 
     with open(input_path, 'rb') as infile:
-        infile.seek(16)  # Skip IV
+        infile.read(16)
         ciphertext = infile.read()
         plaintext = decryptor.update(ciphertext) + decryptor.finalize()
         unpadded = unpadder.update(plaintext) + unpadder.finalize()
