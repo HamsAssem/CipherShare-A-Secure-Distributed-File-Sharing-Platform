@@ -1,13 +1,13 @@
 import os
-import base64
 import hashlib
-import secrets
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives import hashes, padding as sym_padding
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
+from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 
 # === Argon2 Password Hasher ===
 argon2_hasher = PasswordHasher()
@@ -75,3 +75,20 @@ def compute_sha256(filepath):
         for chunk in iter(lambda: f.read(4096), b''):
             sha256.update(chunk)
     return sha256.hexdigest()
+
+def generate_ecdh_keypair():
+    private_key = ec.generate_private_key(ec.SECP384R1())
+    public_key = private_key.public_key()
+    return private_key, public_key
+
+def derive_shared_key(private_key, peer_public_bytes):
+    peer_public_key = ec.EllipticCurvePublicKey.from_encoded_point(ec.SECP384R1(), peer_public_bytes)
+    shared_secret = private_key.exchange(ec.ECDH(), peer_public_key)
+    derived_key = HKDF(
+        algorithm=hashes.SHA256(),
+        length=32,
+        salt=None,
+        info=b"file-transfer",
+        backend=default_backend()
+    ).derive(shared_secret)
+    return derived_key

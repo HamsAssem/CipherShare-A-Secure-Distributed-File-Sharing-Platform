@@ -10,6 +10,17 @@ os.makedirs(SHARED_DIR, exist_ok=True)
 USERS_FILE = "users_peer.json"
 METADATA_FILE = "shared_metadata.json"  # store IV and hash
 
+
+def recv_line(sock):
+    data = b""
+    while not data.endswith(b"\n"):
+        chunk = sock.recv(1)
+        if not chunk:
+            break
+        data += chunk
+    return data.strip().decode()
+
+
 class FileSharePeer:
     def __init__(self, port):
         self.peer_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -97,7 +108,7 @@ class FileSharePeer:
                 filepath = os.path.join(SHARED_DIR, filename + ".enc")
 
                 iv_hex = client_socket.recv(1024).strip().decode()
-                file_hash = client_socket.recv(1024).strip().decode()
+                file_hash = recv_line(client_socket)
 
                 with open(filepath, "wb") as f:
                     while True:
