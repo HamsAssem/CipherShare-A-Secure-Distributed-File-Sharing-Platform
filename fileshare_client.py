@@ -2,25 +2,25 @@ import socket
 import os
 from auth import register_user, login_user
 
-print("Welcome to CipherShare!")
+print("🔐 Welcome to CipherShare!")
 while True:
     action = input("Do you want to LOGIN or REGISTER? ").strip().upper()
-    username = input("Username: ")
-    password = input("Password: ")
+    username = input("👤 Username: ")
+    password = input("🔑 Password: ")
 
     if action == "REGISTER":
         success, msg = register_user(username, password)
-        print(msg)
+        print(f"📋 {msg}")
         if success:
             break
     elif action == "LOGIN":
         if login_user(username, password):
-            print("[+] Login successful!")
+            print("[+] 🔓 Login successful!")
             break
         else:
-            print("[-] Invalid username or password.")
+            print("[-] ❌ Invalid username or password.")
     else:
-        print("[-] Invalid action.")
+        print("[-] ❌ Invalid action. Please choose LOGIN or REGISTER.")
 
 RECEIVED_DIR = "received"
 os.makedirs(RECEIVED_DIR, exist_ok=True)
@@ -37,7 +37,7 @@ class FileShareClient:
             sock.connect((ip, port))
             return sock
         except Exception as e:
-            print(f"[-] Could not connect to peer {ip}:{port} – {e}")
+            print(f"[-] ❌ Could not connect to peer {ip}:{port} – {e}")
             return None
 
     def recv_line(self, sock):
@@ -56,9 +56,9 @@ class FileShareClient:
         sock.send(b"LIST")
         try:
             data = sock.recv(4096).decode()
-            print("[+] Files shared on peer:\n" + data)
+            print("[+] 📂 Files shared on peer:\n" + data)
         except Exception as e:
-            print("[-] Failed to receive file list:", e)
+            print("[-] ❌ Failed to receive file list:", e)
         sock.close()
 
     def download_file(self, ip, port, filename):
@@ -83,7 +83,7 @@ class FileShareClient:
                             break
                         f.write(chunk)
                     except socket.timeout:
-                        print("[-] Timeout during file download.")
+                        print("[-] ❌ Timeout during file download.")
                         break
 
             salt = b'static_salt_demo'
@@ -95,27 +95,27 @@ class FileShareClient:
 
             actual_hash = crypto_utils.compute_sha256(decrypted_path)
             if actual_hash == expected_hash:
-                print("[+] File integrity verified.")
+                print("[+] ✔️ File integrity verified.")
             else:
-                print("[-] Integrity check failed.")
+                print("[-] ❌ Integrity check failed.")
         elif status == b"NOT_FOUND":
-            print("[-] File not found.")
+            print("[-] ❌ File not found.")
         else:
-            print(f"[-] Invalid response: {status}")
+            print(f"[-] ❌ Invalid response: {status}")
         sock.close()
 
     def upload_file(self, filepath):
         import crypto_utils
 
         if not os.path.exists(filepath):
-            print("[-] File does not exist.")
+            print("[-] ❌ File does not exist.")
             return
 
-        ip = input("Peer IP: ").strip()
+        ip = input("🌍 Peer IP: ").strip()
         try:
-            port = int(input("Peer Port: ").strip())
+            port = int(input("🔌 Peer Port: ").strip())
         except ValueError:
-            print("[-] Invalid port number.")
+            print("[-] ❌ Invalid port number.")
             return
 
         sock = self.connect_to_peer(ip, port)
@@ -139,9 +139,8 @@ class FileShareClient:
             while chunk := f.read(1024):
                 sock.send(chunk)
 
-
         os.remove(encrypted_path)
-        print("[+] Encrypted file uploaded.")
+        print("[+] ✔️ Encrypted file uploaded.")
         sock.close()
 
 if __name__ == "__main__":
@@ -150,26 +149,27 @@ if __name__ == "__main__":
     while True:
         cmd = input("Command (LIST, DOWNLOAD <file>, UPLOAD <path>, EXIT): ").strip()
         if cmd == "EXIT":
+            print("👋 Goodbye!")
             break
         elif cmd.startswith("LIST"):
-            ip = input("Peer IP: ").strip()
+            ip = input("🌍 Peer IP: ").strip()
             try:
-                port = int(input("Peer Port: ").strip())
+                port = int(input("🔌 Peer Port: ").strip())
             except ValueError:
-                print("[-] Invalid port number. Please enter a valid number like 9000.")
+                print("[-] ❌ Invalid port number. Please enter a valid number like 9000.")
                 continue
             client.list_shared_files(ip, port)
 
         elif cmd.startswith("DOWNLOAD"):
-            ip = input("Peer IP: ").strip()
+            ip = input("🌍 Peer IP: ").strip()
             try:
-                port = int(input("Peer Port: ").strip())
+                port = int(input("🔌 Peer Port: ").strip())
             except ValueError:
-                print("[-] Invalid port number. Please enter a valid number like 9000.")
+                print("[-] ❌ Invalid port number. Please enter a valid number like 9000.")
                 continue
             parts = cmd.split(" ", 1)
             if len(parts) < 2:
-                print("[-] Missing filename.")
+                print("[-] ❌ Missing filename.")
                 continue
             filename = parts[1]
             client.download_file(ip, port, filename)
@@ -177,10 +177,10 @@ if __name__ == "__main__":
         elif cmd.startswith("UPLOAD"):
             parts = cmd.split(" ", 1)
             if len(parts) < 2:
-                print("[-] Missing file path.")
+                print("[-] ❌ Missing file path.")
                 continue
             filepath = parts[1]
             client.upload_file(filepath)
 
         else:
-            print("[-] Unknown command.")
+            print("[-] ❌ Unknown command.")

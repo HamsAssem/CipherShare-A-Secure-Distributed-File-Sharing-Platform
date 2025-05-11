@@ -52,18 +52,18 @@ class FileSharePeer:
     def start_peer(self):
         self.peer_socket.bind((self.host, self.port))
         self.peer_socket.listen(5)
-        print(f"[+] Peer listening on {self.port}...")
+        print(f"[+] 🎧 Peer listening on {self.port}...")
 
         while True:
             client_socket, addr = self.peer_socket.accept()
             threading.Thread(target=self.handle_client_connection, args=(client_socket, addr)).start()
 
     def handle_client_connection(self, client_socket, client_address):
-        print(f"[+] Connected by {client_address}")
+        print(f"[+] 🤝 Connected by {client_address}")
         try:
             command = client_socket.recv(1024)
             if not command:
-                print(f"[-] Empty command received from {client_address}")
+                print(f"[-] ❌ Empty command received from {client_address}")
                 return
             command = command.decode().strip()
 
@@ -91,17 +91,21 @@ class FileSharePeer:
                     self.users[username] = {"password_hash": hashed_password}
                     self.save_users()
                     client_socket.send(b"REGISTERED")
+                    print(f"[+] 📝 User {username} registered successfully.")
 
             elif command.startswith("LOGIN"):
                 _, username, password = command.split(maxsplit=2)
                 if username not in self.users:
                     client_socket.send(b"USER_NOT_FOUND")
+                    print(f"[-] ❌ User {username} not found.")
                 else:
                     stored_hash = self.users[username]["password_hash"]
                     if verify_password(password, stored_hash):
                         client_socket.send(b"LOGIN_SUCCESS")
+                        print(f"[+] ✅ User {username} logged in successfully.")
                     else:
                         client_socket.send(b"INVALID_PASSWORD")
+                        print(f"[-] ❌ Incorrect password for {username}.")
 
             elif command.startswith("UPLOAD"):
                 _, filename = command.split(maxsplit=1)
@@ -124,7 +128,7 @@ class FileSharePeer:
                 }
                 self.save_metadata()
                 client_socket.send(b"UPLOAD_SUCCESS")
-
+                print(f"[+] 📤 File {filename} uploaded successfully.")
 
             elif command.startswith("DOWNLOAD"):
 
@@ -139,9 +143,9 @@ class FileSharePeer:
 
                     filename = parts[1].strip()
 
-                    print(f"[DEBUG] DOWNLOAD requested for: {filename}")
+                    print(f"[DEBUG] 📥 DOWNLOAD requested for: {filename}")
 
-                    print(f"[DEBUG] Available files: {list(self.shared_files.keys())}")
+                    print(f"[DEBUG] 📂 Available files: {list(self.shared_files.keys())}")
 
                     meta = self.shared_files.get(filename)
 
@@ -156,13 +160,16 @@ class FileSharePeer:
                             while chunk := f.read(1024):
                                 client_socket.send(chunk)
 
+                        print(f"[+] 📥 File {filename} sent to {client_address}.")
+
                     else:
 
                         client_socket.send(b"NOT_FOUND")
+                        print(f"[-] ❌ File {filename} not found.")
 
                 except Exception as e:
 
-                    print(f"[ERROR] Failed to process DOWNLOAD: {e}")
+                    print(f"[ERROR] ❌ Failed to process DOWNLOAD: {e}")
 
                     client_socket.send(b"INVALID_COMMAND")
 
@@ -171,6 +178,6 @@ class FileSharePeer:
 
 
 if __name__ == "__main__":
-    port = int(input("Enter port for peer to listen on: "))
+    port = int(input("⚙️ Enter port for peer to listen on: "))
     peer = FileSharePeer(port)
     peer.start_peer()
